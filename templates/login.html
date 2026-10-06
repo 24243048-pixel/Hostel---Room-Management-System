@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sign in · HostelDesk</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="login-page">
+    <main class="login-card">
+        <a class="brand login-brand" href="{{ url_for('login') }}">
+            <span class="brand-mark">H</span><span>Hostel<span class="brand-light">Desk</span><small>ROOM MANAGEMENT</small></span>
+        </a>
+        <div class="login-heading">
+            <span class="eyebrow">WELCOME BACK</span>
+            <h1>Sign in to your account</h1>
+            <p>Manage campus rooms and student services.</p>
+        </div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-stack">
+                    {% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        <form method="post" class="form-stack" id="login-form">
+            <label for="role">Login as</label>
+            <select id="role" name="role" required>
+                <option value="student" {{ 'selected' if selected_role == 'student' else '' }}>Student</option>
+                <option value="admin" {{ 'selected' if selected_role == 'admin' else '' }}>Admin</option>
+            </select>
+            <label for="username" id="username-label">Student Username / Student ID</label>
+            <input id="username" name="username" type="text" value="{{ username }}" placeholder="Enter your Student ID" autocomplete="username" required autofocus>
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
+            <button class="button button-primary button-wide" type="submit">Sign in <span>→</span></button>
+        </form>
+        <div class="demo-box">
+            <strong>Demo accounts</strong>
+            <div><span>Admin</span><code>admin / admin123</code></div>
+            <div><span>Student accounts</span><code>ST001–ST040 / student123</code></div>
+        </div>
+        <p class="login-foot">Hostel Room Management System</p>
+    </main>
+    <script>
+        const roleSelect = document.getElementById("role");
+        const usernameLabel = document.getElementById("username-label");
+        const usernameInput = document.getElementById("username");
+        function updateLoginCategory() {
+            const isAdmin = roleSelect.value === "admin";
+            usernameLabel.textContent = isAdmin ? "Username" : "Student Username / Student ID";
+            usernameInput.placeholder = isAdmin ? "Enter your username" : "Enter your Student ID";
+        }
+        roleSelect.addEventListener("change", updateLoginCategory);
+        updateLoginCategory();
+    </script>
+</body>
+</html>

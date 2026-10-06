@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Edit room · HostelDesk{% endblock %}
+{% block section %}<a href="{{ url_for('rooms') }}">Rooms</a> / Edit room{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">ACCOMMODATION</span><h1>Edit room</h1><p>Update room details and capacity.</p></div><a class="button button-secondary" href="{{ url_for('rooms') }}">← Back to rooms</a></div>
+<section class="panel form-panel"><div class="panel-heading"><div><h2>Room information</h2><p>Capacity cannot be reduced below the current occupant count.</p></div></div><form method="post" class="form-stack"><div>{% set room = room %}{% include "_room_form.html" %}</div><div class="form-actions"><a class="button button-secondary" href="{{ url_for('rooms') }}">Cancel</a><button class="button button-primary" type="submit">Save changes</button></div></form></section>
+{% endblock %}

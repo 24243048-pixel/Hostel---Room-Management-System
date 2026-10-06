@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}My dashboard · HostelDesk{% endblock %}
+{% block section %}My Dashboard{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">STUDENT PORTAL</span><h1>Hello, {{ student.name.split(' ')[0] }} <span class="wave">✦</span></h1><p>Your accommodation and student information at a glance.</p></div><a class="button button-primary" href="{{ url_for('complaints') }}">＋ Submit a complaint</a></div>
+<div class="content-grid student-overview">
+    <section class="panel personal-panel"><div class="panel-heading"><div><h2>Personal details</h2><p>Your registered student information</p></div><span class="badge active-badge">Active student</span></div>
+        <div class="detail-grid"><div><small>STUDENT ID</small><strong>{{ student.student_id }}</strong></div><div><small>DEPARTMENT</small><strong>{{ student.department }}</strong></div><div><small>YEAR</small><strong>Year {{ student.year }}</strong></div><div><small>PHONE NUMBER</small><strong>{{ student.phone }}</strong></div><div><small>EMAIL ADDRESS</small><strong>{{ student.email }}</strong></div><div><small>GENDER</small><strong>{{ student.gender }}</strong></div></div>
+    </section>
+    <section class="room-card">
+        <div class="room-card-head"><span class="eyebrow">YOUR ACCOMMODATION</span><span class="room-symbol">⌂</span></div>
+        {% if room %}<h2>{{ room.room_number }}</h2><p>Block {{ room.block }} <span>·</span> Floor {{ room.floor }}</p><div class="room-card-rule"></div><div class="room-capacity"><span>Room capacity</span><strong>{{ room.occupied_count }} / {{ room.capacity }} beds occupied</strong></div>
+        {% else %}<h2>Not allocated</h2><p>Please contact your hostel warden.</p><div class="room-card-rule"></div><div class="room-capacity"><span>Roommates</span><strong>Not available</strong></div>{% endif %}
+        <div class="roommates"><small>ROOMMATES</small>{% if roommates %}{% for roommate in roommates %}<div class="roommate"><span class="avatar">{{ roommate.name[0]|upper }}</span><span><strong>{{ roommate.name }}</strong><small>{{ roommate.student_id }} · {{ roommate.department }}</small></span></div>{% endfor %}{% else %}<p class="muted">No roommates assigned yet.</p>{% endif %}</div>
+    </section>
+</div>
+<section class="panel student-room-change-panel">
+    <div class="panel-heading"><div><span class="eyebrow">ROOM CHANGE</span><h2>Room Change Request</h2><p>Request a move to another room with available space. A warden must approve it before your room changes.</p></div><a class="button button-primary" href="{{ url_for('student_room_change_requests') }}">Open room change requests →</a></div>
+    {% if room_change_requests %}
+    <div class="table-wrap"><table><thead><tr><th>REQUESTED</th><th>CURRENT ROOM</th><th>REQUESTED ROOM</th><th>REASON</th><th>STATUS</th></tr></thead><tbody>
+    {% for change_request in room_change_requests %}
+    <tr><td>{{ change_request.requested_at[:10] }}</td><td>{{ change_request.current_room_number or '—' }}</td><td>{{ change_request.requested_room_number or '—' }}</td><td>{{ change_request.reason }}</td><td><span class="badge room-change-status {{ change_request.status|lower }}">{{ change_request.status }}</span>{% if change_request.status == 'REJECTED' and change_request.admin_comment %}<small class="table-sub">{{ change_request.admin_comment }}</small>{% endif %}</td></tr>
+    {% endfor %}
+    </tbody></table></div>
+    {% else %}<div class="empty-state">You have not made a room change request yet.</div>{% endif %}
+</section>
+<section class="panel student-attendance-panel">
+    <div class="panel-heading"><div><span class="eyebrow">ATTENDANCE</span><h2>My attendance</h2><p>Your attendance statistics calculated from recorded marks.</p></div><a class="text-link" href="{{ url_for('student_attendance') }}">Full history →</a></div>
+    <div class="student-attendance-summary">
+        <div class="attendance-rate"><strong>{{ attendance_rate }}%</strong><small>Overall attendance · {{ (attendance_summary.present_days or 0) + (attendance_summary.absent_days or 0) + (attendance_summary.late_days or 0) }} working days</small></div>
+        <div class="attendance-count"><span class="attendance-dot present-dot"></span><small>Present</small><strong>{{ attendance_summary.present_days or 0 }}</strong></div>
+        <div class="attendance-count"><span class="attendance-dot absent-dot"></span><small>Absent</small><strong>{{ attendance_summary.absent_days or 0 }}</strong></div>
+        <div class="attendance-count"><span class="attendance-dot late-dot"></span><small>Late</small><strong>{{ attendance_summary.late_days or 0 }}</strong></div>
+        <div class="attendance-count"><span class="attendance-dot leave-dot"></span><small>Leave</small><strong>{{ attendance_summary.leave_days or 0 }}</strong></div>
+    </div>
+    <div class="today-attendance-status"><span>Today's attendance</span>{% if today_attendance %}<span class="badge attendance-badge {{ today_attendance.status|lower }}">{{ today_attendance.status|upper }}</span>{% else %}<span class="badge not-marked-badge">NOT MARKED</span>{% endif %}</div>
+    {% if attendance_recent %}<div class="recent-attendance">{% for record in attendance_recent %}<div><span class="attendance-date">{{ record.attendance_date|format_date }}</span><span class="badge attendance-badge {{ record.status|lower }}">{{ record.status }}</span>{% if record.notes %}<small>{{ record.notes }}</small>{% endif %}</div>{% endfor %}</div>{% else %}<div class="empty-state">No attendance has been recorded for you yet.</div>{% endif %}
+</section>
+<section id="hostel-fees" class="panel student-fee-panel">
+    <div class="panel-heading"><div><span class="eyebrow">HOSTEL FEES</span><h2>Your fee summary</h2><p>Fee balances and payment status for your latest billing period.</p></div>{% if fee %}<span class="badge {{ fee.computed_status|lower|replace(' ', '-') }}">{{ fee.computed_status }}</span>{% endif %}</div>
+    {% if fee %}
+    <div class="fee-detail-grid">
+        <div><small>FEE PERIOD</small><strong>{{ fee.period }}</strong></div>
+        <div><small>TOTAL FEE</small><strong>{{ fee.fee_amount|inr }}</strong></div>
+        <div><small>AMOUNT PAID</small><strong>{{ fee.paid_amount|inr }}</strong></div>
+        <div><small>PENDING AMOUNT</small><strong>{{ fee.pending_amount|inr }}</strong></div>
+        <div><small>DUE DATE</small><strong>{{ fee.due_date|format_date }}</strong></div>
+        <div><small>LAST PAYMENT DATE</small><strong>{{ fee.payment_date|format_date if fee.payment_date else 'No payment yet' }}</strong></div>
+    </div>
+    {% else %}<div class="empty-state">No fee record is available yet. Please contact the hostel administration.</div>{% endif %}
+    {% if fee_reminder == 'paid' %}
+        <div class="fee-reminder reminder-paid"><span>✓</span><div><strong>Fee Paid</strong><p>Your hostel fee of {{ fee.fee_amount|inr }} has been successfully paid. No payment is currently pending.</p></div></div>
+    {% elif fee_reminder == 'overdue' %}
+        <div class="fee-reminder reminder-overdue"><span>⚠</span><div><strong>Fee Overdue</strong><p>Your hostel fee payment of {{ fee.pending_amount|inr }} is overdue. Please contact the hostel administration.</p></div></div>
+    {% elif fee_reminder == 'due-soon' %}
+        <div class="fee-reminder reminder-soon"><span>🔔</span><div><strong>Fee Reminder</strong><p>Your hostel fee balance of {{ fee.pending_amount|inr }} is due on {{ fee.due_date|format_date }}. Please complete the payment before the due date.</p></div></div>
+    {% elif fee_reminder == 'pending' %}
+        <div class="fee-reminder reminder-soon"><span>🔔</span><div><strong>Fee Pending</strong><p>{{ fee.pending_amount|inr }} remains due by {{ fee.due_date|format_date }}. Please contact the hostel administration for payment arrangements.</p></div></div>
+    {% endif %}
+</section>
+<section class="panel student-payment-panel">
+    <div class="panel-heading"><div><h2>Payment history</h2><p>Transactions recorded for your fee accounts.</p></div></div>
+    {% if payment_history %}<div class="table-wrap"><table><thead><tr><th>DATE</th><th>TRANSACTION ID</th><th>PERIOD</th><th>AMOUNT</th><th>METHOD</th><th>STATUS</th></tr></thead><tbody>{% for payment in payment_history %}<tr><td>{{ payment.payment_date|format_date }}</td><td><code>{{ payment.transaction_id }}</code></td><td>{{ payment.period }}</td><td><strong>{{ payment.amount|inr }}</strong></td><td>{{ payment.payment_method }}</td><td><span class="badge resolved">{{ payment.status }}</span></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty-state">No payments have been recorded yet.</div>{% endif %}
+</section>
+<section class="panel complaints-panel"><div class="panel-heading"><div><h2>Complaint history</h2><p>Track the status of requests you have sent</p></div><a class="text-link" href="{{ url_for('complaints') }}">View all →</a></div>
+{% if complaints %}<div class="table-wrap"><table><thead><tr><th>COMPLAINT</th><th>CATEGORY</th><th>ROOM</th><th>DATE</th><th>STATUS</th></tr></thead><tbody>{% for complaint in complaints %}<tr><td><strong>{{ complaint.description|truncate(55) }}</strong></td><td>{{ complaint.category }}</td><td>{{ complaint.room_number or '—' }}</td><td>{{ complaint.created_at[:10] }}</td><td><span class="badge {{ complaint.status|lower|replace(' ', '-') }}">{{ complaint.status }}</span></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty-state">You have not submitted any complaints yet.</div>{% endif %}</section>
+{% endblock %}

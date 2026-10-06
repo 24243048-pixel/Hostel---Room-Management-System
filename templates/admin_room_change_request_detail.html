@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Review room change · HostelDesk{% endblock %}
+{% block section %}Room Change Requests{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">REQUEST REVIEW</span><h1>Room change request #{{ change_request.id }}</h1><p>Review the student's current assignment and re-check room availability before deciding.</p></div><a class="button button-secondary" href="{{ url_for('admin_room_change_requests') }}">← All requests</a></div>
+
+<section class="panel room-change-detail-panel">
+    <div class="panel-heading"><div><h2>{{ change_request.name }}</h2><p>{{ change_request.student_code }} · {{ change_request.department }} · Year {{ change_request.year }}</p></div><span class="badge room-change-status {{ change_request.status|lower }}">{{ change_request.status }}</span></div>
+    <div class="room-change-detail-grid">
+        <article><span class="eyebrow">STUDENT INFORMATION</span><dl><div><dt>Name</dt><dd>{{ change_request.name }}</dd></div><div><dt>Student ID</dt><dd>{{ change_request.student_code }}</dd></div><div><dt>Department</dt><dd>{{ change_request.department }}</dd></div><div><dt>Year</dt><dd>{{ change_request.year }}</dd></div></dl></article>
+        <article><span class="eyebrow">CURRENT ROOM</span><h3>{{ change_request.current_room_number or 'No current room' }}</h3><p>{% if change_request.current_room_number %}Block {{ change_request.current_block }} · Floor {{ change_request.current_floor }} · {{ change_request.current_occupied }} / {{ change_request.current_capacity }} occupied{% endif %}</p></article>
+        <article><span class="eyebrow">REQUESTED ROOM · {{ change_request.requested_available }} AVAILABLE</span><h3>{{ change_request.requested_room_number or 'Room no longer exists' }}</h3><p>{% if change_request.requested_room_number %}Block {{ change_request.requested_block }} · Floor {{ change_request.requested_floor }} · {{ change_request.requested_occupied }} / {{ change_request.requested_capacity }} occupied · {{ change_request.requested_available }} available{% endif %}</p></article>
+    </div>
+    <div class="room-change-request-copy"><div><small>REASON</small><strong>{{ change_request.reason }}</strong></div><div><small>DETAILED DESCRIPTION</small><p>{{ change_request.description }}</p></div><div><small>REQUESTED</small><strong>{{ change_request.requested_at }}</strong></div>
+    {% if change_request.reviewed_at %}<div><small>REVIEWED</small><strong>{{ change_request.reviewed_at }}</strong></div>{% endif %}
+    {% if change_request.admin_comment %}<div><small>ADMIN RESPONSE</small><p>{{ change_request.admin_comment }}</p></div>{% endif %}</div>
+</section>
+
+{% if change_request.status == 'PENDING' %}
+<div class="room-change-review-actions">
+    <section class="panel"><div class="panel-heading"><div><h2>Approve request</h2><p>Approval moves the student's allocation and updates both room occupancies together.</p></div></div>
+        <form method="post" action="{{ url_for('approve_room_change_request_api', request_id=change_request.id) }}" data-confirm="Approve this room change? The student's current room allocation will be moved." data-loading-label="Approving...">
+            <div class="field"><label for="approval_comment">Approval comment <small>(optional)</small></label><textarea id="approval_comment" name="admin_comment" rows="2" maxlength="1000" placeholder="Add any information for the student."></textarea></div>
+            <button class="button button-primary" type="submit">Approve request</button>
+        </form>
+    </section>
+    <section class="panel"><div class="panel-heading"><div><h2>Reject request</h2><p>A rejection reason is required and the student's room will remain unchanged.</p></div></div>
+        <form method="post" action="{{ url_for('reject_room_change_request_api', request_id=change_request.id) }}" data-confirm="Reject this room change request? The student will see your reason." data-loading-label="Rejecting...">
+            <div class="field"><label for="rejection_reason">Rejection reason <span>*</span></label><textarea id="rejection_reason" name="rejection_reason" rows="2" maxlength="1000" required placeholder="Explain why this request cannot be approved."></textarea></div>
+            <button class="button button-outline-danger" type="submit">Reject request</button>
+        </form>
+    </section>
+</div>
+{% endif %}
+{% endblock %}

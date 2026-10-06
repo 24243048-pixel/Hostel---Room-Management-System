@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Attendance · HostelDesk{% endblock %}
+{% block section %}Attendance{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">STUDENT PRESENCE</span><h1>Attendance management</h1><p>Take the daily register and review attendance records.</p></div><a class="button button-secondary" href="{{ url_for('attendance_reports') }}">View reports <span>→</span></a></div>
+<div class="attendance-tabs"><a class="selected" href="{{ url_for('attendance_management') }}">Daily register</a><a href="{{ url_for('attendance_reports') }}">Attendance reports</a></div>
+<div class="attendance-summary-cards">
+    <article><span class="attendance-dot present-dot"></span><div><strong>{{ counts.Present }}</strong><small>Present</small></div></article>
+    <article><span class="attendance-dot absent-dot"></span><div><strong>{{ counts.Absent }}</strong><small>Absent</small></div></article>
+    <article><span class="attendance-dot late-dot"></span><div><strong>{{ counts.Late }}</strong><small>Late</small></div></article>
+    <article><span class="attendance-dot leave-dot"></span><div><strong>{{ counts.Leave }}</strong><small>Leave</small></div></article>
+    <article><span class="attendance-dot unmarked-dot"></span><div><strong>{{ unmarked_count }}</strong><small>Not marked</small></div></article>
+</div>
+<section class="panel attendance-list-panel">
+    <div class="attendance-toolbar">
+        <div><h2>Daily student register <span class="count-pill">{{ students|length }}</span></h2><p>{{ marked_count }} of {{ students|length }} shown students marked for this day.</p></div>
+        <form method="get" class="attendance-filter-form">
+            <input type="date" name="date" value="{{ selected_date }}" max="{{ today }}" aria-label="Attendance date">
+            <input type="search" name="q" value="{{ search }}" placeholder="Search name or ID" aria-label="Search students">
+            <select name="room" aria-label="Filter by room"><option value="">All rooms</option>{% for room in rooms %}<option value="{{ room.room_number }}" {{ 'selected' if room_filter == room.room_number else '' }}>{{ room.room_number }}</option>{% endfor %}<option value="__unassigned__" {{ 'selected' if room_filter == '__unassigned__' else '' }}>Unassigned</option></select>
+            <button class="button button-primary button-small" type="submit">Show</button>
+        </form>
+    </div>
+    {% if students %}
+    <form method="post" action="{{ url_for('attendance_management') }}" data-loading-label="Saving attendance…">
+        <input type="hidden" name="date" value="{{ selected_date }}">
+        {% if search %}<input type="hidden" name="q" value="{{ search }}">{% endif %}
+        {% if room_filter %}<input type="hidden" name="room" value="{{ room_filter }}">{% endif %}
+        <div class="table-wrap"><table class="attendance-table"><thead><tr><th>STUDENT</th><th>ROOM</th><th>DEPARTMENT</th><th>ATTENDANCE</th><th>NOTE (OPTIONAL)</th></tr></thead><tbody>
+        {% for student in students %}<tr>
+            <td><input type="hidden" name="student_ids" value="{{ student.id }}"><div class="person-cell"><span class="avatar">{{ student.name[0]|upper }}</span><span><strong>{{ student.name }}</strong><small>{{ student.student_id }} · Year {{ student.year }}</small></span></div></td>
+            <td>{{ student.room_number or '—' }}</td><td>{{ student.department }}</td>
+            <td><select class="attendance-select {{ student.status|lower if student.status else 'unmarked' }}" name="status_{{ student.id }}" required aria-label="Attendance for {{ student.name }}">{% for status in statuses %}<option value="{{ status }}" {{ 'selected' if student.status == status else ('' if student.status else ('selected' if status == 'Present' else '')) }}>{{ status }}</option>{% endfor %}</select></td>
+            <td><input class="attendance-note" type="text" name="notes_{{ student.id }}" maxlength="300" value="{{ student.notes or '' }}" placeholder="Optional note"></td>
+        </tr>{% endfor %}
+        </tbody></table></div>
+        <div class="attendance-submit-row"><small>Saving updates the selected students' records for {{ selected_date|format_date }}.</small><button class="button button-primary" type="submit">Save attendance <span>→</span></button></div>
+    </form>
+    {% else %}<div class="empty-state">No students match your search or room filter.</div>{% endif %}
+</section>
+{% endblock %}

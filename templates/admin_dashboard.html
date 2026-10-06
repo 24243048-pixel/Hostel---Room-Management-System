@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · HostelDesk{% endblock %}
+{% block section %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-heading">
+    <div><span class="eyebrow">OVERVIEW</span><h1>Good day, {{ session.get('username')|title }} <span class="wave">✦</span></h1><p>Here is what is happening in your hostel today.</p></div>
+    <a class="button button-primary" href="{{ url_for('allocation') }}">＋ Allocate a room</a>
+</div>
+<div class="stats-grid">
+    <article class="stat-card"><div class="stat-top"><span class="stat-icon violet">♙</span><span class="stat-caption">PEOPLE</span></div><strong>{{ stats.students }}</strong><span class="stat-name">Total students</span><a href="{{ url_for('students') }}">View students <span>→</span></a></article>
+    <article class="stat-card"><div class="stat-top"><span class="stat-icon blue">⌂</span><span class="stat-caption">ACCOMMODATION</span></div><strong>{{ stats.rooms }}</strong><span class="stat-name">Total rooms</span><a href="{{ url_for('rooms') }}">Manage rooms <span>→</span></a></article>
+    <article class="stat-card"><div class="stat-top"><span class="stat-icon green">▣</span><span class="stat-caption">OCCUPANCY</span></div><strong>{{ stats.occupied }}<small> / {{ stats.rooms }}</small></strong><span class="stat-name">Occupied rooms</span><a href="{{ url_for('allocation') }}">View allocations <span>→</span></a></article>
+    <article class="stat-card"><div class="stat-top"><span class="stat-icon amber">⌂</span><span class="stat-caption">AVAILABILITY</span></div><strong>{{ stats.available }}</strong><span class="stat-name">Rooms with open beds</span><a href="{{ url_for('rooms') }}">Check availability <span>→</span></a></article>
+</div>
+<div class="content-grid dashboard-lower">
+    <section class="panel">
+        <div class="panel-heading"><div><h2>Recent complaints</h2><p>Latest requests from your residents</p></div><a class="text-link" href="{{ url_for('complaints') }}">View all →</a></div>
+        {% if complaints %}
+        <div class="table-wrap"><table><thead><tr><th>STUDENT</th><th>CATEGORY</th><th>ROOM</th><th>STATUS</th></tr></thead><tbody>
+        {% for complaint in complaints %}<tr><td><strong>{{ complaint.student_name }}</strong><small class="table-sub">{{ complaint.created_at[:10] }}</small></td><td>{{ complaint.category }}</td><td>{{ complaint.room_number or '—' }}</td><td><span class="badge {{ complaint.status|lower|replace(' ', '-') }}">{{ complaint.status }}</span></td></tr>{% endfor %}
+        </tbody></table></div>
+        {% else %}<div class="empty-state">No complaints have been submitted.</div>{% endif %}
+    </section>
+    <aside class="panel quick-panel"><span class="eyebrow">QUICK ACTIONS</span><h2>What would you like to do?</h2>
+        <a href="{{ url_for('add_student') }}"><span class="quick-icon violet">＋</span><span><strong>Add a student</strong><small>Create a student record</small></span><b>›</b></a>
+        <a href="{{ url_for('add_room') }}"><span class="quick-icon blue">⌂</span><span><strong>Add a room</strong><small>Set up a new room</small></span><b>›</b></a>
+        <a href="{{ url_for('allocation') }}"><span class="quick-icon green">⇄</span><span><strong>Allocate a room</strong><small>Assign a student a bed</small></span><b>›</b></a>
+    </aside>
+</div>
+<section class="fee-summary-card">
+    <div class="fee-summary-icon">₹</div>
+    <div class="fee-summary-copy"><span class="eyebrow">HOSTEL FEES</span><h2>Fee collection overview</h2><p>{{ fee_stats.paid }} paid · {{ fee_stats.pending_students }} pending of {{ fee_stats.students }} students · latest fee record</p></div>
+    <div class="fee-summary-amounts"><div><small>COLLECTED</small><strong>{{ fee_stats.collected|inr }}</strong></div><div><small>PENDING</small><strong>{{ fee_stats.pending_amount|inr }}</strong></div></div>
+    <a class="button button-primary" href="{{ url_for('fee_management') }}">View fee management <span>→</span></a>
+</section>
+<section class="attendance-summary-strip">
+    <span class="attendance-summary-icon">✓</span>
+    <div><strong>Attendance · {{ attendance_count }} students</strong><small>Today: {{ today_status.get('Present', 0) }} present · {{ today_status.get('Absent', 0) }} absent · {{ today_status.get('Leave', 0) }} on leave · Six-month overall: {{ overall_attendance }}%</small></div>
+    <a class="button button-secondary button-small" href="{{ url_for('attendance_dashboard') }}">View Attendance →</a>
+    <a class="button button-secondary button-small" href="{{ url_for('attendance_management') }}">Mark attendance →</a>
+</section>
+<section class="room-change-summary-strip">
+    <span class="room-change-summary-icon">⇄</span>
+    <div><strong>Room Change Requests · {{ room_change_stats.total }} total</strong><small>{{ room_change_stats.pending }} pending · {{ room_change_stats.approved }} approved · {{ room_change_stats.rejected }} rejected</small></div>
+    <a class="button button-secondary button-small" href="{{ url_for('admin_room_change_requests') }}">Review requests →</a>
+</section>
+<div class="notice-strip"><span>ℹ</span><div><strong>{{ stats.complaints }} pending complaint{{ '' if stats.complaints == 1 else 's' }}</strong><small>Review student requests and update their status.</small></div><a href="{{ url_for('complaints') }}">Review complaints →</a></div>
+{% endblock %}

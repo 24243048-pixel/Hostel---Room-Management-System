@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Attendance reports · HostelDesk{% endblock %}
+{% block section %}Attendance Reports{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">ANALYTICS & REPORTS</span><h1>Attendance reports</h1><p>Review attendance patterns across students and rooms for a selected period.</p></div><a class="button button-secondary" href="{{ url_for('attendance_management') }}">← Daily register</a></div>
+<div class="attendance-tabs"><a href="{{ url_for('attendance_management') }}">Daily register</a><a class="selected" href="{{ url_for('attendance_reports') }}">Attendance reports</a></div>
+<section class="panel attendance-report-panel">
+    <form method="get" class="report-filter-form">
+        <div class="field"><label for="date_from">From date</label><input id="date_from" type="date" name="date_from" value="{{ date_from }}" required></div>
+        <div class="field"><label for="date_to">To date</label><input id="date_to" type="date" name="date_to" value="{{ date_to }}" required></div>
+        <div class="field"><label for="q">Student search</label><input id="q" type="search" name="q" value="{{ search }}" placeholder="Name or student ID"></div>
+        <div class="field"><label for="room">Room</label><select id="room" name="room"><option value="">All rooms</option>{% for room in rooms %}<option value="{{ room.room_number }}" {{ 'selected' if room_filter == room.room_number else '' }}>{{ room.room_number }}</option>{% endfor %}<option value="__unassigned__" {{ 'selected' if room_filter == '__unassigned__' else '' }}>Unassigned</option></select></div>
+        <div class="field"><label for="status">Status present in range</label><select id="status" name="status"><option value="">All statuses</option>{% for status in statuses %}<option value="{{ status }}" {{ 'selected' if status_filter == status else '' }}>{{ status }}</option>{% endfor %}</select></div>
+        <div class="report-filter-actions"><button class="button button-primary" type="submit">Generate report</button><a class="button button-secondary" href="{{ url_for('attendance_reports') }}">Reset</a></div>
+    </form>
+</section>
+<div class="attendance-report-stats">
+    <article><strong>{{ totals.students }}</strong><small>Students in report</small></article>
+    <article><strong>{{ totals.records }}</strong><small>Attendance records</small></article>
+    <article><strong>{{ totals.rate }}%</strong><small>Attendance rate</small></article>
+    <article><strong>{{ totals.absent }}</strong><small>Absent marks</small></article>
+</div>
+<section class="panel attendance-list-panel">
+    <div class="attendance-toolbar report-toolbar"><div><h2>Student attendance summary</h2><p>{{ date_from|format_date }} – {{ date_to|format_date }} · {{ rows|length }} student(s)</p></div>
+        <a class="button button-secondary button-small" href="{{ url_for('attendance_reports', date_from=date_from, date_to=date_to, q=search, room=room_filter, status=status_filter, export='csv') }}">Export CSV ↓</a>
+    </div>
+    {% if rows %}<div class="table-wrap"><table><thead><tr><th>STUDENT</th><th>ROOM</th><th>RECORDED</th><th>PRESENT</th><th>ABSENT</th><th>LATE</th><th>LEAVE</th><th>ATTENDANCE RATE</th></tr></thead><tbody>
+    {% for row in rows %}<tr><td><div class="person-cell"><span class="avatar">{{ row.name[0]|upper }}</span><span><strong>{{ row.name }}</strong><small>{{ row.student_id }} · {{ row.department }}</small></span></div></td><td>{{ row.room_number or '—' }}</td><td>{{ row.total_days }}</td><td><span class="report-status present">{{ row.present_days }}</span></td><td><span class="report-status absent">{{ row.absent_days }}</span></td><td><span class="report-status late">{{ row.late_days }}</span></td><td><span class="report-status leave">{{ row.leave_days }}</span></td><td><div class="rate-cell"><div><i style="width: {{ row.attendance_rate }}%"></i></div><strong>{{ row.attendance_rate }}%</strong></div></td></tr>{% endfor %}
+    </tbody></table></div>{% else %}<div class="empty-state">No students match these report filters.</div>{% endif %}
+</section>
+{% endblock %}

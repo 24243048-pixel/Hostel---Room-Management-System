@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}My attendance · HostelDesk{% endblock %}
+{% block section %}My Attendance{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">STUDENT PORTAL</span><h1>My attendance</h1><p>View your recorded attendance history.</p></div><a class="button button-secondary" href="{{ url_for('student_dashboard') }}">← My dashboard</a></div>
+<div class="student-attendance-grid">
+<section class="panel attendance-calendar-panel">
+    <div class="attendance-toolbar"><div><h2>Attendance calendar · {{ month_label }}</h2><p>Calendar based on recorded attendance</p></div>
+        <form method="get" class="calendar-month-form"><label for="calendar-month">Month</label><input id="calendar-month" type="month" name="month" value="{{ month_value }}" max="{{ today[:7] }}"><button class="button button-primary button-small" type="submit">Show</button></form>
+    </div>
+    <div class="attendance-calendar">
+        <div class="calendar-weekdays">{% for day in ('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun') %}<span>{{ day }}</span>{% endfor %}</div>
+        {% for week in calendar_weeks %}<div class="calendar-week">{% for day in week %}{% if day %}{% set full_date = month_value ~ '-' ~ '%02d'|format(day) %}{% set day_status = calendar_records.get(full_date, '') %}<div class="calendar-day {{ day_status|lower if day_status else 'no-record' }} {{ 'calendar-today' if full_date == today else '' }}"><strong>{{ day }}</strong>{% if day_status %}<small>{{ day_status|upper }}</small>{% endif %}</div>{% else %}<div class="calendar-day calendar-empty"></div>{% endif %}{% endfor %}</div>{% endfor %}
+    </div>
+    <div class="calendar-legend"><span><i class="present-dot"></i> Present</span><span><i class="absent-dot"></i> Absent</span><span><i class="leave-dot"></i> Leave</span></div>
+</section>
+<section class="panel attendance-list-panel student-history-panel">
+    <div class="attendance-toolbar"><div><h2>Attendance history <span class="count-pill">{{ records|length }}</span></h2><p>Only your own attendance records are shown here.</p></div>
+        <form method="get" class="student-history-filter">
+            <input type="month" name="month" value="{{ filters.month }}" max="{{ today[:7] }}" aria-label="Filter by month">
+            <input type="date" name="date_from" value="{{ filters.date_from }}" aria-label="From date">
+            <input type="date" name="date_to" value="{{ filters.date_to }}" aria-label="To date">
+            <select name="status" aria-label="Filter by status"><option value="">All statuses</option>{% for status in ('Present', 'Absent', 'Late', 'Leave') %}<option value="{{ status }}" {{ 'selected' if filters.status == status else '' }}>{{ status }}</option>{% endfor %}</select>
+            <button class="button button-primary button-small" type="submit">Filter</button><a class="button button-secondary button-small" href="{{ url_for('student_attendance') }}">Reset</a>
+        </form>
+    </div>
+    {% if records %}<div class="table-wrap"><table><thead><tr><th>DATE</th><th>DAY</th><th>STATUS</th><th>NOTE</th></tr></thead><tbody>{% for record in records %}<tr><td>{{ record.attendance_date|format_date }}</td><td>{{ record.attendance_date|weekday }}</td><td><span class="badge attendance-badge {{ record.status|lower }}">{{ record.status }}</span></td><td>{{ record.notes or '—' }}</td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty-state">No attendance has been recorded for you yet.</div>{% endif %}
+</section>
+</div>
+{% endblock %}

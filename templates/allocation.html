@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Room allocation · HostelDesk{% endblock %}
+{% block section %}Room Allocation{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">RESIDENT PLACEMENT</span><h1>Room allocation</h1><p>Assign students to rooms, move them, or remove an allocation.</p></div></div>
+<section class="panel allocation-form-panel"><div class="panel-heading"><div><h2>Allocate or change room</h2><p>Students with an existing room can be moved to another available room.</p></div><span class="quick-icon violet">⇄</span></div>
+<form method="post" class="allocation-form">
+    <div class="field"><label for="student_id">Student <span>*</span></label><select id="student_id" name="student_id" required><option value="">Choose a student</option>{% for student in students %}<option value="{{ student.id }}">{{ student.student_id }} · {{ student.name }}{% if student.room_number %} (currently {{ student.room_number }}){% endif %}</option>{% endfor %}</select></div>
+    <div class="field"><label for="room_id">Available room <span>*</span></label><select id="room_id" name="room_id" required><option value="">Choose a room</option>{% for room in rooms %}{% if room.available_beds > 0 %}<option value="{{ room.id }}">{{ room.room_number }} · Block {{ room.block }}, floor {{ room.floor }} · {{ room.available_beds }} bed{{ '' if room.available_beds == 1 else 's' }} available</option>{% endif %}{% endfor %}</select></div>
+    <button class="button button-primary" type="submit">Save allocation <span>→</span></button>
+</form>
+<p class="form-note">A student can only have one room at a time. Changing rooms releases their previous bed automatically.</p></section>
+<section class="panel listing-panel"><div class="list-toolbar"><div><h2>Current allocations <span class="count-pill">{{ allocations|length }}</span></h2><p>Assigned residents and their rooms.</p></div></div>
+{% if allocations %}<div class="table-wrap"><table><thead><tr><th>STUDENT</th><th>ROOM</th><th>LOCATION</th><th>ALLOCATED</th><th>ACTION</th></tr></thead><tbody>{% for allocation in allocations %}<tr><td><div class="person-cell"><span class="avatar">{{ allocation.name[0]|upper }}</span><span><strong>{{ allocation.name }}</strong><small>{{ allocation.student_id }}</small></span></div></td><td><strong>{{ allocation.room_number }}</strong></td><td>Block {{ allocation.block }} · Floor {{ allocation.floor }}</td><td>{{ allocation.allocated_at[:10] }}</td><td><form method="post" action="{{ url_for('remove_allocation', allocation_id=allocation.id) }}" data-confirm="Remove {{ allocation.name }} from room {{ allocation.room_number }}?"><button class="button button-small button-outline-danger" type="submit">Remove</button></form></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty-state">There are no active room allocations.</div>{% endif %}</section>
+{% endblock %}

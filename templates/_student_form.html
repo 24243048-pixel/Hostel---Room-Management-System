@@ -1,0 +1,9 @@
+<div class="form-grid">
+    <div class="field"><label for="student_id">Student ID <span>*</span></label><input id="student_id" name="student_id" value="{{ student.get('student_id', '') }}" placeholder="e.g. STU005" required></div>
+    <div class="field"><label for="name">Full name <span>*</span></label><input id="name" name="name" value="{{ student.get('name', '') }}" placeholder="Student's full name" required></div>
+    <div class="field"><label for="department">Department <span>*</span></label><input id="department" name="department" value="{{ student.get('department', '') }}" placeholder="e.g. Computer Science" required></div>
+    <div class="field"><label for="year">Year of study <span>*</span></label><select id="year" name="year" required><option value="">Select year</option>{% for year in range(1, 7) %}<option value="{{ year }}" {{ 'selected' if student.get('year')|string == year|string else '' }}>Year {{ year }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="phone">Phone number <span>*</span></label><input id="phone" name="phone" type="tel" value="{{ student.get('phone', '') }}" placeholder="e.g. 9876543210" required></div>
+    <div class="field"><label for="email">Email address <span>*</span></label><input id="email" name="email" type="email" value="{{ student.get('email', '') }}" placeholder="name@example.com" required></div>
+    <div class="field"><label for="gender">Gender <span>*</span></label><select id="gender" name="gender" required><option value="">Select gender</option>{% for gender in genders %}<option value="{{ gender }}" {{ 'selected' if student.get('gender') == gender else '' }}>{{ gender }}</option>{% endfor %}</select></div>
+</div>

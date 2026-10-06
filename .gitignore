@@ -1,0 +1,10 @@
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+hostel.db
+hostel.db-journal
+hostel.db-shm
+hostel.db-wal
+.env
+.vscode/

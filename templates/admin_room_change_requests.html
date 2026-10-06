@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Room change requests · HostelDesk{% endblock %}
+{% block section %}Room Change Requests{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">RESIDENT SERVICES</span><h1>Room Change Requests</h1><p>Review student requests and keep room assignments and occupancy in sync.</p></div></div>
+
+<div class="room-change-admin-stats">
+    <article><small>TOTAL REQUESTS</small><strong>{{ summary.total }}</strong></article>
+    <article class="pending-stat"><small>PENDING</small><strong>{{ summary.pending }}</strong></article>
+    <article class="approved-stat"><small>APPROVED</small><strong>{{ summary.approved }}</strong></article>
+    <article class="rejected-stat"><small>REJECTED</small><strong>{{ summary.rejected }}</strong></article>
+</div>
+
+<div class="room-change-analytics">
+    <section class="panel"><div class="panel-heading"><div><h2>Most requested rooms</h2><p>Based on stored request records.</p></div></div>
+        {% if requested_rooms %}<div class="room-change-analytics-list">{% for room in requested_rooms %}<div><span>Room {{ room.room_number }}</span><strong>{{ room.request_count }} request{{ '' if room.request_count == 1 else 's' }}</strong></div>{% endfor %}</div>{% else %}<div class="empty-state">No request data yet.</div>{% endif %}
+    </section>
+    <section class="panel"><div class="panel-heading"><div><h2>Reasons</h2><p>Student-selected reasons.</p></div></div>
+        {% if reasons %}<div class="room-change-analytics-list">{% for reason in reasons %}<div><span>{{ reason.reason }}</span><strong>{{ reason.request_count }}</strong></div>{% endfor %}</div>{% else %}<div class="empty-state">No request data yet.</div>{% endif %}
+    </section>
+</div>
+
+<section class="panel room-change-admin-list">
+    <div class="list-toolbar"><div><h2>All requests <span class="count-pill">{{ requests|length }}</span></h2><p>Search, filter, and open a request to review it.</p></div></div>
+    <form method="get" class="room-change-filter-form">
+        <input type="search" name="q" value="{{ search }}" placeholder="Search student name or ID" aria-label="Search student name or ID">
+        <select name="status" aria-label="Filter by status"><option value="">All statuses</option>{% for status in ('PENDING', 'APPROVED', 'REJECTED') %}<option value="{{ status }}" {% if status_filter == status %}selected{% endif %}>{{ status|title }}</option>{% endfor %}</select>
+        <select name="current_room" aria-label="Filter by current room"><option value="">Any current room</option>{% for room in rooms %}<option value="{{ room.room_number }}" {% if current_room_filter == room.room_number %}selected{% endif %}>{{ room.room_number }}</option>{% endfor %}</select>
+        <select name="requested_room" aria-label="Filter by requested room"><option value="">Any requested room</option>{% for room in rooms %}<option value="{{ room.room_number }}" {% if requested_room_filter == room.room_number %}selected{% endif %}>{{ room.room_number }}</option>{% endfor %}</select>
+        <input type="date" name="date" value="{{ requested_date }}" aria-label="Filter by request date">
+        <button class="button button-primary button-small" type="submit">Apply</button><a class="button button-secondary button-small" href="{{ url_for('admin_room_change_requests') }}">Clear</a>
+    </form>
+    {% if requests %}
+    <div class="table-wrap"><table><thead><tr><th>STUDENT</th><th>STUDENT ID</th><th>CURRENT ROOM</th><th>REQUESTED ROOM</th><th>REASON</th><th>DATE</th><th>STATUS</th><th>ACTION</th></tr></thead><tbody>
+    {% for change_request in requests %}
+    <tr><td><strong>{{ change_request.name }}</strong></td><td>{{ change_request.student_code }}</td><td>{{ change_request.current_room_number or '—' }}</td><td>{{ change_request.requested_room_number or '—' }}</td><td>{{ change_request.reason }}</td><td>{{ change_request.requested_at[:10] }}</td><td><span class="badge room-change-status {{ change_request.status|lower }}">{{ change_request.status }}</span></td><td><a class="button button-secondary button-small" href="{{ url_for('admin_room_change_request_detail', request_id=change_request.id) }}">View details</a></td></tr>
+    {% endfor %}
+    </tbody></table></div>
+    {% else %}<div class="empty-state">No room change requests match these filters.</div>{% endif %}
+</section>
+{% endblock %}

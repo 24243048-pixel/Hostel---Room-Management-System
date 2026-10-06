@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Create fee record · HostelDesk{% endblock %}
+{% block section %}<a href="{{ url_for('fee_management') }}">Fee Management</a> / Create fee record{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">ACCOUNTS & BILLING</span><h1>Create fee record</h1><p>Set a student's fee amount, billing period, and due date.</p></div><a class="button button-secondary" href="{{ url_for('fee_management') }}">← Fee management</a></div>
+<section class="panel form-panel fee-form-panel"><div class="panel-heading"><div><h2>Fee details</h2><p>Each student can have one fee record per billing period.</p></div></div>
+    {% if students %}<form method="post" class="form-stack" data-loading-label="Creating fee record…">
+        <div class="form-grid">
+            <div class="field"><label for="student_id">Student <span>*</span></label><select id="student_id" name="student_id" required><option value="">Select a student</option>{% for student in students %}<option value="{{ student.id }}" {{ 'selected' if values.student_id|string == student.id|string else '' }}>{{ student.student_id }} · {{ student.name }}</option>{% endfor %}</select></div>
+            <div class="field"><label for="period">Fee period <span>*</span></label><input id="period" name="period" maxlength="60" value="{{ values.period }}" placeholder="e.g. 2026-27 Semester 1" required></div>
+            <div class="field"><label for="fee_amount">Total hostel fee (₹) <span>*</span></label><input id="fee_amount" name="fee_amount" type="number" min="0" step="0.01" value="{{ values.fee_amount }}" placeholder="e.g. 25000" required></div>
+            <div class="field"><label for="due_date">Due date <span>*</span></label><input id="due_date" name="due_date" type="date" value="{{ values.due_date }}" required></div>
+        </div>
+        <div class="form-actions"><a class="button button-secondary" href="{{ url_for('fee_management') }}">Cancel</a><button class="button button-primary" type="submit">Create fee record</button></div>
+    </form>{% else %}<div class="empty-state">Add a student before creating a fee record.</div>{% endif %}
+</section>
+{% endblock %}

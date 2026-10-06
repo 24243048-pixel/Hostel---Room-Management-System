@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Hostel Room Management{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="{{ url_for('static', filename='script.js') }}" defer></script>
+</head>
+<body class="app-body">
+    <aside class="sidebar">
+        <a class="brand" href="{{ url_for('index') }}">
+            <span class="brand-mark">H</span>
+            <span>Hostel<span class="brand-light">Desk</span><small>ROOM MANAGEMENT</small></span>
+        </a>
+        <div class="side-label">MENU</div>
+        <nav class="side-nav">
+            {% if session.get('role') == 'admin' %}
+                <a class="{{ 'active' if request.endpoint == 'admin_dashboard' else '' }}" href="{{ url_for('admin_dashboard') }}"><span>▦</span> Dashboard</a>
+                <a class="{{ 'active' if request.endpoint in ('students', 'add_student', 'edit_student') else '' }}" href="{{ url_for('students') }}"><span>♙</span> Students</a>
+                <a class="{{ 'active' if request.endpoint in ('rooms', 'add_room', 'edit_room') else '' }}" href="{{ url_for('rooms') }}"><span>⌂</span> Rooms</a>
+                <a class="{{ 'active' if request.endpoint in ('allocation', 'remove_allocation') else '' }}" href="{{ url_for('allocation') }}"><span>⇄</span> Room Allocation</a>
+                <a class="{{ 'active' if request.endpoint == 'complaints' else '' }}" href="{{ url_for('complaints') }}"><span>▤</span> Complaints</a>
+                <a class="{{ 'active' if request.endpoint in ('fee_management', 'add_fee_record', 'fee_details') else '' }}" href="{{ url_for('fee_management') }}"><span>₹</span> Fee Management</a>
+                <a class="{{ 'active' if request.endpoint in ('attendance_dashboard', 'attendance_management', 'attendance_reports') else '' }}" href="{{ url_for('attendance_dashboard') }}"><span>✓</span> Attendance</a>
+                <a class="{{ 'active' if request.endpoint in ('admin_room_change_requests', 'admin_room_change_request_detail') else '' }}" href="{{ url_for('admin_room_change_requests') }}"><span>⇄</span> Room Change Requests</a>
+            {% else %}
+                <a class="{{ 'active' if request.endpoint == 'student_dashboard' else '' }}" href="{{ url_for('student_dashboard') }}"><span>▦</span> My Dashboard</a>
+                <a href="{{ url_for('student_dashboard') }}#hostel-fees"><span>₹</span> Hostel Fees</a>
+                <a class="{{ 'active' if request.endpoint == 'student_attendance' else '' }}" href="{{ url_for('student_attendance') }}"><span>✓</span> Attendance</a>
+                <a class="{{ 'active' if request.endpoint == 'complaints' else '' }}" href="{{ url_for('complaints') }}"><span>▤</span> Complaints</a>
+                <a class="{{ 'active' if request.endpoint == 'student_room_change_requests' else '' }}" href="{{ url_for('student_room_change_requests') }}"><span>⇄</span> Room Change Request</a>
+            {% endif %}
+        </nav>
+        <div class="sidebar-bottom">
+            <div class="profile-mini">
+                <div class="avatar">{{ (session.get('username', 'U')[0] if session.get('username') else 'U')|upper }}</div>
+                <div><strong>{{ session.get('username', 'User') }}</strong><small>{{ session.get('role', '')|title }}</small></div>
+            </div>
+            <a class="logout-link" href="{{ url_for('logout') }}"><span>↪</span> Log out</a>
+        </div>
+    </aside>
+    <main class="main-area">
+        <header class="topbar">
+            <div class="breadcrumb">Hostel Management <span>/</span> {% block section %}Workspace{% endblock %}</div>
+            <div class="topbar-user"><span class="online-dot"></span> {{ session.get('username', 'User') }}</div>
+        </header>
+        <section class="page-content">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-stack">
+                        {% for category, message in messages %}
+                            <div class="flash {{ category }}">{{ message }}<button type="button" aria-label="Dismiss" onclick="this.parentElement.remove()">×</button></div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            {% block content %}{% endblock %}
+        </section>
+        <footer class="page-footer">HostelDesk · A simple campus living solution</footer>
+    </main>
+</body>
+</html>

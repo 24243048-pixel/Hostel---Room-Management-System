@@ -1,0 +1,6 @@
+<div class="form-grid">
+    <div class="field"><label for="room_number">Room number <span>*</span></label><input id="room_number" name="room_number" value="{{ room.get('room_number', '') }}" placeholder="e.g. A-103" required></div>
+    <div class="field"><label for="block">Block <span>*</span></label><input id="block" name="block" value="{{ room.get('block', '') }}" placeholder="e.g. A" required></div>
+    <div class="field"><label for="floor">Floor <span>*</span></label><input id="floor" name="floor" type="number" min="0" value="{{ room.get('floor', '') }}" placeholder="e.g. 1" required></div>
+    <div class="field"><label for="capacity">Room capacity <span>*</span></label><input id="capacity" name="capacity" type="number" min="1" value="{{ room.get('capacity', '') }}" placeholder="e.g. 4" required>{% if occupied_count is defined %}<small class="field-help">Current occupants: {{ occupied_count }}</small>{% endif %}</div>
+</div>

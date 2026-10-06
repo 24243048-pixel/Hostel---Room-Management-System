@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Fee Management · HostelDesk{% endblock %}
+{% block section %}Fee Management{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">ACCOUNTS & BILLING</span><h1>Fee management</h1><p>Review student balances, record payments, and track hostel fee collection.</p></div><a class="button button-primary" href="{{ url_for('add_fee_record') }}">＋ Create fee record</a></div>
+
+<div class="fee-stats-grid">
+    <article class="fee-stat"><span class="stat-icon violet">♙</span><strong>{{ summary.students }}</strong><small>Total students</small></article>
+    <article class="fee-stat"><span class="stat-icon green">✓</span><strong>{{ summary.paid }}</strong><small>Paid in latest period</small></article>
+    <article class="fee-stat"><span class="stat-icon amber">◷</span><strong>{{ summary.pending_students }}</strong><small>Pending students</small></article>
+    <article class="fee-stat"><span class="stat-icon blue">₹</span><strong>{{ summary.collected|inr }}</strong><small>Total collected · all periods</small></article>
+    <article class="fee-stat"><span class="stat-icon amber">◷</span><strong>{{ summary.pending_amount|inr }}</strong><small>Total pending · all periods</small></article>
+</div>
+<div class="fee-due-strip"><span>◷</span><div><strong>{{ 'Past due date' if summary.due_is_overdue else 'Current fee due date' }}</strong><small>{% if summary.due_date %}{{ summary.due_date|format_date }} · Earliest outstanding balance{% elif summary.pending_students %}Create fee records to track all student balances{% else %}All latest fee records are paid{% endif %}</small></div><span class="due-period">{{ periods[0].period if periods else 'No fee periods yet' }}</span></div>
+
+<div class="fee-charts-grid">
+    <section class="panel fee-chart-panel"><div class="panel-heading"><div><h2>Paid vs pending students</h2><p>Latest fee record per student</p></div></div>
+        <div class="donut-chart-layout">
+            <div class="fee-donut" style="--paid-rate: {{ paid_percent }}%" role="img" aria-label="{{ summary.paid }} paid and {{ summary.pending_students }} pending students"><div><strong>{{ paid_percent }}%</strong><small>paid</small></div></div>
+            <div class="chart-legend"><div><i class="legend-dot fee-paid-dot"></i><span>Paid students</span><strong>{{ summary.paid }}</strong></div><div><i class="legend-dot fee-pending-dot"></i><span>Not paid</span><strong>{{ summary.pending_students }}</strong></div><small>Students without a fee record are included in pending.</small></div>
+        </div>
+    </section>
+    <section class="panel fee-chart-panel collection-panel"><div class="panel-heading"><div><h2>Monthly fee collection</h2><p>Recorded payments · last six months</p></div><span class="chart-currency">INR</span></div>
+        <div class="collection-chart" role="img" aria-label="Monthly fee collections for the latest six months">{% for month in collections %}{% set bar_height = (month.amount * 100 / peak_collection)|round(0, 'floor')|int if peak_collection else 0 %}<div class="collection-column"><span class="collection-value">{{ month.amount|inr if month.amount else '—' }}</span><div class="collection-track"><i style="height: {{ bar_height }}%"></i></div><small>{{ month.label }}</small></div>{% endfor %}</div>
+    </section>
+</div>
+
+<section class="panel listing-panel fee-list-panel">
+    <div class="list-toolbar fee-list-toolbar"><div><h2>Student fee records <span class="count-pill">{{ fees|length }}</span></h2><p>Search, filter, and open a fee record to view payment details.</p></div>
+        <form method="get" class="fee-filter-form">
+            <label class="fee-search"><span>⌕</span><input type="search" name="q" value="{{ filters.q }}" placeholder="Name or student ID"></label>
+            <select name="status" aria-label="Filter by payment status"><option value="">All statuses</option><option value="PAID" {{ 'selected' if filters.status == 'PAID' else '' }}>Paid</option><option value="NOT PAID" {{ 'selected' if filters.status == 'NOT PAID' else '' }}>Not paid</option></select>
+            <select name="room" aria-label="Filter by room"><option value="">All rooms</option>{% for room in rooms %}<option value="{{ room.room_number }}" {{ 'selected' if filters.room == room.room_number else '' }}>{{ room.room_number }}</option>{% endfor %}<option value="__unassigned__" {{ 'selected' if filters.room == '__unassigned__' else '' }}>Unassigned</option></select>
+            <input type="date" name="due_date" aria-label="Filter by due date" value="{{ filters.due_date }}">
+            <select name="period" aria-label="Filter by fee period"><option value="">All periods</option>{% for period in periods %}<option value="{{ period.period }}" {{ 'selected' if filters.period == period.period else '' }}>{{ period.period }}</option>{% endfor %}</select>
+            <button class="button button-primary button-small" type="submit">Apply</button><a class="button button-secondary button-small" href="{{ url_for('fee_management') }}">Reset</a>
+        </form>
+    </div>
+    {% if fees %}<div class="table-wrap"><table><thead><tr><th>STUDENT</th><th>ROOM</th><th>FEE AMOUNT</th><th>PAID</th><th>PENDING</th><th>DUE DATE</th><th>PAYMENT DATE</th><th>STATUS</th><th>ACTION</th></tr></thead><tbody>
+    {% for fee in fees %}<tr><td><div class="person-cell"><span class="avatar">{{ fee.name[0]|upper }}</span><span><strong>{{ fee.name }}</strong><small>{{ fee.student_code }} · {{ fee.period }}</small></span></div></td><td>{{ fee.room_number or '—' }}</td><td>{{ fee.fee_amount|inr }}</td><td>{{ fee.paid_amount|inr }}</td><td><strong>{{ fee.pending_amount|inr }}</strong></td><td>{{ fee.due_date|format_date }}</td><td>{{ fee.payment_date|format_date if fee.payment_date else '—' }}</td><td><span class="badge fee-status {{ fee.computed_status|lower|replace(' ', '-') }}">{{ '✓ PAID' if fee.computed_status == 'PAID' else '✕ ' ~ fee.computed_status }}</span></td><td><a class="button button-secondary button-small" href="{{ url_for('fee_details', fee_id=fee.id) }}">View details</a></td></tr>{% endfor %}
+    </tbody></table></div>{% else %}<div class="empty-state">No fee records match these filters. Create a fee record to get started.</div>{% endif %}
+</section>
+{% endblock %}

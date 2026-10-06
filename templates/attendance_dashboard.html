@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Attendance dashboard · HostelDesk{% endblock %}
+{% block section %}Attendance Dashboard{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">ATTENDANCE OVERVIEW</span><h1>Attendance dashboard</h1><p>Daily presence, six-month trends, and students needing follow-up.</p></div><a class="button button-primary" href="{{ url_for('attendance_management') }}">✓ Take attendance</a></div>
+<div class="attendance-tabs"><a class="selected" href="{{ url_for('attendance_dashboard') }}">Overview</a><a href="{{ url_for('attendance_management') }}">Daily register</a><a href="{{ url_for('attendance_reports') }}">Reports</a></div>
+<div class="attendance-admin-stats">
+    <article><span class="stat-icon violet">♙</span><strong>{{ student_count }}</strong><small>Total students</small></article>
+    <article><span class="attendance-dot present-dot"></span><strong>{{ today_counts.Present }}</strong><small>Present today</small></article>
+    <article><span class="attendance-dot absent-dot"></span><strong>{{ today_counts.Absent }}</strong><small>Absent today</small></article>
+    <article><span class="attendance-dot leave-dot"></span><strong>{{ today_counts.Leave }}</strong><small>On leave today</small></article>
+    <article><span class="stat-icon green">%</span><strong>{{ overall_rate }}%</strong><small>Six-month overall attendance</small></article>
+</div>
+<div class="attendance-admin-charts">
+    <section class="panel admin-attendance-chart">
+        <div class="panel-heading"><div><h2>Today's attendance distribution</h2><p>Based on marks recorded for {{ today|format_date }}</p></div></div>
+        {% set today_total = today_counts.Present + today_counts.Absent + today_counts.Leave + today_counts.Late %}
+        <div class="today-chart-layout">
+            <div class="today-donut" style="--present: {{ today_counts.Present * 100 / (today_total if today_total else 1) }}%; --absent: {{ (today_counts.Present + today_counts.Absent) * 100 / (today_total if today_total else 1) }}%; --leave: {{ (today_counts.Present + today_counts.Absent + today_counts.Leave) * 100 / (today_total if today_total else 1) }}%" role="img" aria-label="{{ today_counts.Present }} present, {{ today_counts.Absent }} absent, {{ today_counts.Leave }} on leave"><div><strong>{{ today_total }}</strong><small>marked</small></div></div>
+            <div class="chart-legend"><div><i class="legend-dot fee-paid-dot"></i><span>Present</span><strong>{{ today_counts.Present }}</strong></div><div><i class="legend-dot fee-pending-dot"></i><span>Absent</span><strong>{{ today_counts.Absent }}</strong></div><div><i class="legend-dot absent-dot"></i><span>Leave</span><strong>{{ today_counts.Leave }}</strong></div><small>{{ unmarked_today }} student(s) not yet marked today.</small></div>
+        </div>
+    </section>
+    <section class="panel admin-attendance-chart monthly-attendance-chart">
+        <div class="panel-heading"><div><h2>Monthly attendance percentage</h2><p>Present ÷ recorded working days · actual database records</p></div><span class="chart-currency">LAST 6 MONTHS</span></div>
+        <div class="collection-chart attendance-monthly-chart" role="img" aria-label="Monthly attendance percentage for the past six months">
+            {% for month in month_points %}<div class="collection-column"><span class="collection-value">{{ month.rate }}%</span><div class="collection-track"><i class="attendance-month-bar" style="height: {{ month.rate }}%"></i></div><small>{{ month.label }}</small></div>{% endfor %}
+        </div>
+    </section>
+</div>
+<section class="panel attendance-low-panel">
+    <div class="attendance-toolbar">
+        <div><h2>⚠️ Low attendance students <span class="count-pill">{{ low_students|length }}</span></h2><p>Students under the configured {{ threshold }}% threshold for the last six months.</p></div>
+        <form method="get" class="attendance-filter-form"><input type="number" name="threshold" min="1" max="100" value="{{ threshold }}" aria-label="Low attendance threshold"><input type="search" name="q" value="{{ search }}" placeholder="Name or Student ID" aria-label="Search student"><select name="room" aria-label="Filter room"><option value="">All rooms</option>{% for room in rooms %}<option value="{{ room.room_number }}" {{ 'selected' if room_filter == room.room_number else '' }}>{{ room.room_number }}</option>{% endfor %}</select><button class="button button-primary button-small" type="submit">Apply</button></form>
+    </div>
+    {% if low_students %}<div class="table-wrap"><table><thead><tr><th>STUDENT</th><th>ROOM</th><th>WORKING DAYS</th><th>PRESENT</th><th>ABSENT</th><th>ATTENDANCE</th><th>DETAILS</th></tr></thead><tbody>{% for row in low_students %}<tr><td><div class="person-cell"><span class="avatar">{{ row.name[0]|upper }}</span><span><strong>{{ row.name }}</strong><small>{{ row.student_id }} · {{ row.department }}</small></span></div></td><td>{{ row.room_number or '—' }}</td><td>{{ row.working_days }}</td><td>{{ row.present_days }}</td><td>{{ row.absent_days }}</td><td><span class="badge low-attendance-badge">{{ row.attendance_rate }}% · Low</span></td><td><a class="text-link" href="{{ url_for('attendance_reports', q=row.student_id, date_from=range_start, date_to=today) }}">View report →</a></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty-state">No students are below {{ threshold }}% for the selected search and room.</div>{% endif %}
+</section>
+<section class="panel attendance-list-panel attendance-search-panel">
+    <div class="attendance-toolbar"><div><h2>Student attendance search</h2><p>Search by student name or ID; filter by room to inspect six-month totals.</p></div></div>
+    <form method="get" class="attendance-search-form"><input type="search" name="q" value="{{ search }}" placeholder="Search name or Student ID"><select name="room"><option value="">All rooms</option>{% for room in rooms %}<option value="{{ room.room_number }}" {{ 'selected' if room_filter == room.room_number else '' }}>{{ room.room_number }}</option>{% endfor %}<option value="__unassigned__" {{ 'selected' if room_filter == '__unassigned__' else '' }}>Unassigned</option></select><input type="hidden" name="threshold" value="{{ threshold }}"><button class="button button-primary button-small" type="submit">Search</button><a class="button button-secondary button-small" href="{{ url_for('attendance_dashboard') }}">Reset</a></form>
+    {% if rows %}<div class="table-wrap"><table><thead><tr><th>STUDENT</th><th>ROOM</th><th>WORKING DAYS</th><th>PRESENT</th><th>ABSENT</th><th>LEAVE</th><th>ATTENDANCE</th><th>REPORT</th></tr></thead><tbody>{% for row in rows %}<tr><td><div class="person-cell"><span class="avatar">{{ row.name[0]|upper }}</span><span><strong>{{ row.name }}</strong><small>{{ row.student_id }}</small></span></div></td><td>{{ row.room_number or '—' }}</td><td>{{ row.working_days }}</td><td>{{ row.present_days }}</td><td>{{ row.absent_days }}</td><td>{{ row.leave_days }}</td><td><span class="badge {{ 'low-attendance-badge' if row.attendance_rate < threshold else 'resolved' }}">{{ row.attendance_rate }}%</span></td><td><a class="text-link" href="{{ url_for('attendance_reports', q=row.student_id, date_from=range_start, date_to=today) }}">Details →</a></td></tr>{% endfor %}</tbody></table></div>{% else %}<div class="empty-state">No students found for your search.</div>{% endif %}
+</section>
+{% endblock %}

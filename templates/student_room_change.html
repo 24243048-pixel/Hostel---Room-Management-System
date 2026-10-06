@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Room change requests · HostelDesk{% endblock %}
+{% block section %}Room Change Request{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">STUDENT SERVICES</span><h1>Room Change Request</h1><p>Choose a room with available beds and submit your request for warden review.</p></div><a class="button button-secondary" href="{{ url_for('student_dashboard') }}">← My dashboard</a></div>
+
+<div class="room-change-student-layout">
+    <section class="panel">
+        <div class="panel-heading"><div><h2>Your current room</h2><p>Your identity and current allocation are read from your signed-in account.</p></div></div>
+        <div class="room-change-current-card">
+            <div class="room-change-student-info"><small>STUDENT</small><strong>{{ student.name }}</strong><span>{{ student.student_id }} · {{ student.department }} · Year {{ student.year }}</span></div>
+            {% if current_room %}
+            <div class="room-change-current-room"><small>CURRENT ROOM</small><strong>{{ current_room.room_number }}</strong><span>Block {{ current_room.block }} · Floor {{ current_room.floor }}</span><span>{{ 'Single occupancy' if current_room.capacity == 1 else current_room.capacity ~ ' sharing' }} · {{ current_room.occupied_count }} / {{ current_room.capacity }} occupied</span></div>
+            {% else %}
+            <div class="empty-state">You do not have a current room allocation. Contact the hostel office before requesting a room change.</div>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-heading"><div><h2>Available rooms</h2><p>Only rooms with current available capacity are listed. Your current room is excluded.</p></div><span class="count-pill">{{ available_rooms|length }} available</span></div>
+        {% if has_pending_request %}
+        <div class="room-change-alert"><strong>You already have a pending room change request.</strong><span>Wait for the administration to review it before submitting another request.</span></div>
+        {% endif %}
+        {% if current_room and not has_pending_request %}
+        <form method="post" class="room-change-form" data-loading-label="Submitting request..." data-confirm="Submit this room change request for admin review?">
+            <div class="field"><label for="reason">Reason for room change <span>*</span></label><select id="reason" name="reason" required><option value="">Choose a reason</option>{% for reason in reasons %}<option value="{{ reason }}">{{ reason }}</option>{% endfor %}</select></div>
+            <div class="field"><label for="description">Detailed description <span>*</span></label><textarea id="description" name="description" rows="3" maxlength="1000" required placeholder="Explain why you are requesting a room change."></textarea><small class="field-hint">Required · up to 1,000 characters</small></div>
+            {% if available_rooms %}
+            <div class="room-change-room-grid">
+                {% for room in available_rooms %}
+                <label class="room-option">
+                    <input type="radio" name="requested_room_id" value="{{ room.id }}" data-room-name="{{ room.room_number }}" data-room-type="{{ room.room_type }}" required>
+                    <span class="room-option-content">
+                        <span class="room-option-title"><strong>Room {{ room.room_number }}</strong><span class="room-select-check">Select</span></span>
+                        <span class="room-option-type">{{ room.room_type }}</span>
+                        <span class="room-option-stats"><span>Capacity <b>{{ room.capacity }}</b></span><span>Occupied <b>{{ room.occupied_count }}</b></span><span>Available <b>{{ room.available_beds }}</b></span></span>
+                        <span class="room-option-location">Block {{ room.block }} · Floor {{ room.floor }}</span>
+                    </span>
+                </label>
+                {% endfor %}
+            </div>
+            {% else %}<div class="empty-state">There are no other rooms with available beds right now.</div>{% endif %}
+
+            <div class="room-change-request-summary" aria-live="polite">
+                <div><span class="eyebrow">CONFIRMATION</span><h3>Room Change Request Summary</h3></div>
+                <dl><div><dt>Student</dt><dd>{{ student.name }} · {{ student.student_id }}</dd></div><div><dt>Current room</dt><dd>{{ current_room.room_number }}</dd></div><div><dt>Requested room</dt><dd id="summary-room">Select one available room</dd></div><div><dt>Reason</dt><dd id="summary-reason">Select a reason</dd></div><div><dt>Description</dt><dd id="summary-description">Enter your detailed description</dd></div></dl>
+            </div>
+            <button class="button button-primary" type="submit" {% if not available_rooms %}disabled{% endif %}>Submit Request <span>→</span></button>
+        </form>
+        {% endif %}
+    </section>
+</div>
+
+<section class="panel room-change-history-panel">
+    <div class="panel-heading"><div><h2>My Room Change Requests</h2><p>Your request history and any response from the administration.</p></div><span class="count-pill">{{ requests|length }}</span></div>
+    {% if requests %}
+    <div class="table-wrap"><table><thead><tr><th>REQUEST DATE</th><th>CURRENT ROOM</th><th>REQUESTED ROOM</th><th>REASON</th><th>STATUS / ADMIN RESPONSE</th></tr></thead><tbody>
+    {% for change_request in requests %}
+    <tr><td>{{ change_request.requested_at[:10] }}</td><td>{{ change_request.current_room_number or '—' }}</td><td>{{ change_request.requested_room_number or '—' }}</td><td>{{ change_request.reason }}</td><td><span class="badge room-change-status {{ change_request.status|lower }}">{{ change_request.status }}</span>{% if change_request.admin_comment %}<small class="table-sub">{{ 'Approval information' if change_request.status == 'APPROVED' else 'Admin response' }}: {{ change_request.admin_comment }}</small>{% elif change_request.status == 'APPROVED' %}<small class="table-sub">Reviewed {{ change_request.reviewed_at[:10] if change_request.reviewed_at else '' }}</small>{% endif %}</td></tr>
+    {% endfor %}
+    </tbody></table></div>
+    {% else %}<div class="empty-state">You have not submitted any room change requests.</div>{% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Edit student · HostelDesk{% endblock %}
+{% block section %}<a href="{{ url_for('students') }}">Students</a> / Edit student{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">STUDENT DIRECTORY</span><h1>Edit student</h1><p>Update this student's registered information.</p></div><a class="button button-secondary" href="{{ url_for('students') }}">← Back to students</a></div>
+<section class="panel form-panel"><div class="panel-heading"><div><h2>Student information</h2><p>Fields marked with * are required.</p></div></div><form method="post" class="form-stack"><div>{% set student = student %}{% include "_student_form.html" %}</div><div class="form-actions"><a class="button button-secondary" href="{{ url_for('students') }}">Cancel</a><button class="button button-primary" type="submit">Save changes</button></div></form></section>
+{% endblock %}

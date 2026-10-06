@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Add student · HostelDesk{% endblock %}
+{% block section %}<a href="{{ url_for('students') }}">Students</a> / Add student{% endblock %}
+{% block content %}
+<div class="page-heading"><div><span class="eyebrow">STUDENT DIRECTORY</span><h1>Add student</h1><p>Create a student profile and portal login.</p></div><a class="button button-secondary" href="{{ url_for('students') }}">← Back to students</a></div>
+<section class="panel form-panel"><div class="panel-heading"><div><h2>Student information</h2><p>Fields marked with * are required.</p></div></div><form method="post" class="form-stack"><input type="hidden" name="csrf_marker" value="local-app"><div>{% set student = values %}{% include "_student_form.html" %}</div><div class="form-actions"><a class="button button-secondary" href="{{ url_for('students') }}">Cancel</a><button class="button button-primary" type="submit">Add student</button></div></form><div class="form-note">The student can sign in using their Student ID and the default password <code>student123</code>.</div></section>
+{% endblock %}
